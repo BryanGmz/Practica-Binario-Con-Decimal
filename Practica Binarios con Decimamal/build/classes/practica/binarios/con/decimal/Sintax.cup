@@ -1,0 +1,72 @@
+package practica.binarios.con.decimal;
+
+import java_cup.runtime.*;
+
+parser code {:
+
+    public Sintax(Lexico lexer) { 
+        super(lexer);   
+    }
+
+    @Override
+    public void syntax_error(Symbol s){
+        if(s.right != -1){
+            try {
+                System.out.println(
+                (("Error Sintaxis Linea #: " + (s.right + 1) 
+                + " Columna # " + (s.left + 1) 
+                + " Token NO Reconocido: -> " + (s.value) + "\n" )));
+            } catch (Exception e) {
+                System.out.println("Error " + e.toString());
+            }
+        }
+        
+    }
+:}
+    
+
+/* Terminales */
+
+terminal    BINARIO, PUNTO;
+
+/* No Terminales */
+
+non terminal    inicio;
+non terminal    produccion_binario;
+non terminal    binario_entero, binario_decimal, bin;
+
+/* Gramaticas */
+
+start with inicio;
+
+inicio ::= 
+    produccion_binario:e {:System.out.println("El resultado de la conversion es: " + ((Numero) e).getNumero());:}
+;
+
+produccion_binario ::=
+    binario_entero:e                                {:RESULT = e;:}
+    | binario_entero:a PUNTO binario_decimal:e      {:RESULT = new Numero(0, ((Numero) a).getNumero() + ((Numero) e).getNumero());:}
+;
+
+binario_entero ::=
+    bin:e                                           {:RESULT = e;:}
+    | binario_entero:a bin:e
+    {:
+        RESULT = new Numero(((Numero) e).getBase() + 1, ((Numero) a).getNumero()*(((int) Math.pow(2, ((Numero) e).getBase() + 1))) + ((Numero) e).getNumero());
+    :}
+;
+
+binario_decimal ::=
+    bin:e                                           
+    {: 
+        RESULT = new Numero(((Numero) e).getBase() + 1, ((Numero) e).getNumero()*(1/((double) Math.pow(2, ((Numero) e).getBase() + 1))));
+    :}
+    | binario_decimal:a bin:e
+    {: 
+        RESULT = new Numero(((Numero) a).getBase() + 1, ((Numero) e).getNumero()*(1/((double) Math.pow(2, ((Numero) a).getBase() + 1))) + ((Numero) a).getNumero());
+    :}
+;
+
+bin ::=
+    BINARIO:e                                       {:RESULT = new Numero(0, Double.parseDouble(e.toString()));:}
+;
